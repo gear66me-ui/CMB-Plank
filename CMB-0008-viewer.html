@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.css">
+<style>
+html,body,#aladin-lite-div{width:100%;height:100%;margin:0;background:#05070a;overflow:hidden}
+#status{position:absolute;left:10px;bottom:10px;z-index:20;background:rgba(5,12,24,.88);color:white;padding:7px 10px;border-radius:7px;font:12px/1.35 sans-serif;max-width:78%;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="aladin-lite-div"></div>
+<div id="status">Loading real sky imagery and Gaia DR3 sources…</div>
+<script src="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js" charset="utf-8"></script>
+<script>
+const p=new URLSearchParams(location.search);
+const ra=parseFloat(p.get('ra')||'48.2498333333');
+const dec=parseFloat(p.get('dec')||'-20.0358333333');
+const fov=parseFloat(p.get('fov')||'0.05');
+const radius=parseFloat(p.get('radius')||'0.05');
+const survey=p.get('survey')||'P/DSS2/color';
+A.init.then(()=>{
+ const aladin=A.aladin('#aladin-lite-div',{survey:survey,target:ra+' '+dec,fov:fov,cooFrame:'ICRS',showReticle:true,showGotoControl:true,showFullscreenControl:true,showLayersControl:true,showSimbadPointerControl:true,showCooGridControl:true});
+ const center=A.catalog({name:'Selected coordinate',sourceSize:18,color:'#00ff72',shape:'circle'});
+ center.addSources([A.marker(ra,dec,{popupTitle:'Selected coordinate',popupDesc:'RA 03:12:59.96<br>Dec -20:02:09.0<br>Green circle marks the exact supplied position.'})]);
+ aladin.addCatalog(center);
+ const status=document.getElementById('status');
+ const gaia=A.catalogFromVizieR('I/355/gaiadr3',{ra:ra,dec:dec},radius,{name:'Gaia DR3',sourceSize:10,color:'#ffd400',shape:'cross',onClick:'showTable'},sources=>{status.textContent='Gaia DR3: '+sources.length+' source(s) loaded. Green circle = supplied coordinate; yellow crosses = Gaia sources. Click a cross for measurements.'});
+ aladin.addCatalog(gaia);
+}).catch(err=>{document.getElementById('status').textContent='Viewer error: '+err;});
+</script>
+</body>
+</html>
