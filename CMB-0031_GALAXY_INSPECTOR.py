@@ -99,7 +99,8 @@ def cmb0031_inspect(_=None):
             if substituted:
                 display(widgets.HTML(
                     '<div style="background:#180000;color:#fff3e0;padding:10px;border-left:4px solid #ff5252;margin-top:8px">'
-                    'The nearest positional source has no usable redshift. Cosmology below uses the nearest catalog source with a valid redshift, without assigning that redshift to the positional source.'</n                    'div>'
+                    'The nearest positional source has no usable redshift. Cosmology below uses the nearest catalog source with a valid redshift, without assigning that redshift to the positional source.'
+                    '</div>'
                 ))
                 display(widgets.HTML(dark_table_html(cosmo_obj, "Nearest source with usable redshift")))
 
