@@ -1,0 +1,307 @@
+# CMB-0032 PATCH A
+# Native ipyaladin initialization (non-destructive)
+# ============================================================================
+
+from ipyaladin import Aladin
+from IPython.display import display
+
+CMB0032_VERSION = "CMB-0032 PATCH A"
+
+# ------------------------------------------------------------------
+# Create the native Aladin widget
+# ------------------------------------------------------------------
+
+try:
+
+    aladin = Aladin(
+        target=str(target.value),
+        survey=str(survey.value),
+        fov=float(fov.value)
+    )
+
+    IPYALADIN_AVAILABLE = True
+
+except Exception as exc:
+
+    IPYALADIN_AVAILABLE = False
+    aladin = None
+
+    print("ipyaladin initialization failed")
+    print(exc)
+
+# ------------------------------------------------------------------
+# Helper routines
+# ------------------------------------------------------------------
+
+def aladin_sync_from_controls():
+
+    if not IPYALADIN_AVAILABLE:
+        return
+
+    try:
+        aladin.target = str(target.value)
+    except Exception:
+        pass
+
+    try:
+        aladin.survey = str(survey.value)
+    except Exception:
+        pass
+
+    try:
+        aladin.fov = float(fov.value)
+    except Exception:
+        pass
+
+
+def aladin_center_on(coord):
+
+    if not IPYALADIN_AVAILABLE:
+        return
+
+    try:
+        aladin.target = f"{coord.ra.deg} {coord.dec.deg}"
+    except Exception:
+        pass
+
+
+# ------------------------------------------------------------------
+# Synchronize whenever controls change
+# ------------------------------------------------------------------
+
+target.observe(lambda change: aladin_sync_from_controls(), names="value")
+survey.observe(lambda change: aladin_sync_from_controls(), names="value")
+fov.observe(lambda change: aladin_sync_from_controls(), names="value")
+
+# ------------------------------------------------------------------
+# Display below the existing interface.
+# Nothing else changes yet.
+# ------------------------------------------------------------------
+
+if IPYALADIN_AVAILABLE:
+
+    display(
+        widgets.HTML(
+            "<hr><h3>Native Aladin Viewer (Patch A Test)</h3>"
+        )
+    )
+
+    display(aladin)
+
+    print("Native Aladin initialized.")
+
+else:
+
+    print("Native Aladin unavailable.")
+
+
+
+# CMB-0032 PATCH B
+
+# Build a viewer container that will later replace the HTML viewer.
+# For now, both viewers remain available.
+
+native_viewer_output = widgets.Output(layout=widgets.Layout(
+    width="100%",
+    min_height="650px"
+))
+
+with native_viewer_output:
+    clear_output(wait=True)
+
+    if IPYALADIN_AVAILABLE:
+        display(aladin)
+    else:
+        display(
+            widgets.HTML(
+                "<b style='color:#b71c1c'>ipyaladin is not available.</b>"
+            )
+        )
+
+viewer_tabs = widgets.Tab()
+
+viewer_tabs.children = [
+    viewer,                # existing HTML viewer
+    native_viewer_output   # native ipyaladin viewer
+]
+
+viewer_tabs.set_title(0, "Classic")
+viewer_tabs.set_title(1, "Native")
+
+status.value = (
+    "<b style='color:#1565c0'>"
+    "CMB-0032 Patch B loaded. "
+    "Classic and Native viewers are both available."
+    "</b>"
+)
+
+print("CMB-0032 PATCH B")
+
+
+
+
+# CMB-0032 PATCH C
+
+# Keep the native Aladin viewer synchronized with the
+# current coordinates after every successful inspection.
+
+_original_refresh_coordinates = refresh_coordinates
+
+
+def refresh_coordinates_cmb0032(*args, **kwargs):
+
+    result = _original_refresh_coordinates(*args, **kwargs)
+
+    if not IPYALADIN_AVAILABLE:
+        return result
+
+    coord = STATE.get("coord")
+
+    if coord is None:
+        return result
+
+    try:
+        aladin.target = f"{coord.ra.deg} {coord.dec.deg}"
+    except Exception:
+        pass
+
+    return result
+
+
+refresh_coordinates = refresh_coordinates_cmb0032
+
+
+_original_inspect = robust_inspect_galaxy
+
+
+def robust_inspect_galaxy_cmb0032(button=None):
+
+    _original_inspect(button)
+
+    if not IPYALADIN_AVAILABLE:
+        return
+
+    obj = STATE.get("object")
+
+    if obj is None:
+        return
+
+    ra = safe_float(obj.get("RA"))
+    dec = safe_float(obj.get("Dec"))
+
+    if np.isfinite(ra) and np.isfinite(dec):
+
+        try:
+            aladin.target = f"{ra} {dec}"
+        except Exception:
+            pass
+
+
+inspect_button.on_click(_original_inspect, remove=True)
+inspect_button.on_click(robust_inspect_galaxy_cmb0032)
+
+
+def center_on_current_object(_=None):
+
+    obj = STATE.get("object")
+
+    if obj is None:
+        return
+
+    ra = safe_float(obj.get("RA"))
+    dec = safe_float(obj.get("Dec"))
+
+    if not np.isfinite(ra):
+        return
+
+    if not np.isfinite(dec):
+        return
+
+    try:
+        aladin.target = f"{ra} {dec}"
+    except Exception:
+        pass
+
+
+center_button = widgets.Button(
+    description="Center Native Viewer",
+    icon="crosshairs",
+    button_style="info",
+)
+
+center_button.on_click(center_on_current_object)
+
+display(center_button)
+
+status.value = (
+    "<b style='color:#1565c0'>"
+    "CMB-0032 Patch C loaded. "
+    "Native viewer now follows the inspected object."
+    "</b>"
+)
+
+print("CMB-0032 PATCH C")
+
+
+
+# CMB-0032 PATCH D
+
+# Replace the single HTML viewer with a viewer stack.
+
+viewer_stack = widgets.Stack(
+    selected_index=0,
+    layout=widgets.Layout(width="100%", min_height="840px")
+)
+
+legacy_view = widgets.VBox([viewer])
+
+native_view = widgets.VBox()
+
+if IPYALADIN_AVAILABLE:
+    native_view.children = (aladin,)
+else:
+    native_view.children = (
+        widgets.HTML(
+            "<b style='color:#b71c1c'>Native ipyaladin viewer unavailable.</b>"
+        ),
+    )
+
+viewer_stack.children = (
+    legacy_view,
+    native_view,
+)
+
+use_native = widgets.Checkbox(
+    value=False,
+    description="Use Native Aladin Viewer",
+    indent=False,
+)
+
+def toggle_native(change):
+
+    if change["new"]:
+        viewer_stack.selected_index = 1
+    else:
+        viewer_stack.selected_index = 0
+
+use_native.observe(toggle_native, names="value")
+
+viewer_panel = widgets.VBox([
+    use_native,
+    viewer_stack,
+])
+
+status.value = (
+    "<b style='color:#1565c0'>"
+    "CMB-0032 Patch D loaded. "
+    "Viewer stack initialized."
+    "</b>"
+)
+
+print("CMB-0032 PATCH D")
+
+
+
+
+
+
