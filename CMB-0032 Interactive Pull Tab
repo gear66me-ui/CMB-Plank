@@ -300,6 +300,263 @@ status.value = (
 
 print("CMB-0032 PATCH D")
 
+# CMB-0032 PATCH E
+# Compatibility layer
+# --------------------------------------------------------------------
+
+print("CMB-0032 PATCH E")
+
+# ---------- compatibility helpers ----------
+
+def _exists(name):
+    return name in globals()
+
+if not _exists("STATE"):
+    STATE = {}
+
+if not _exists("status"):
+    status = widgets.HTML()
+
+if not _exists("viewer"):
+    viewer = widgets.Output()
+
+if not _exists("safe_float"):
+    def safe_float(x):
+        try:
+            return float(x)
+        except Exception:
+            return np.nan
+
+# ---------- optional hooks ----------
+
+if _exists("refresh_coordinates"):
+
+    _original_refresh_coordinates = refresh_coordinates
+
+    def refresh_coordinates(*args, **kwargs):
+
+        result = _original_refresh_coordinates(*args, **kwargs)
+
+        if IPYALADIN_AVAILABLE:
+
+            coord = STATE.get("coord")
+
+            if coord is not None:
+
+                try:
+                    aladin.target = f"{coord.ra.deg} {coord.dec.deg}"
+                except Exception:
+                    pass
+
+        return result
+
+if _exists("inspect_button") and _exists("robust_inspect_galaxy"):
+
+    inspect_button.on_click(
+        robust_inspect_galaxy_cmb0032,
+        remove=False
+    )
+
+print("Compatibility layer installed.")
+
+# CMB-0032 PATCH F
+# Final viewer replacement
+# ============================================================================
+
+print("CMB-0032 PATCH F")
+
+# ------------------------------------------------------------------
+# Replace the original viewer with the new viewer panel.
+# ------------------------------------------------------------------
+
+try:
+
+    if "viewer" in globals():
+        viewer = viewer_panel
+
+except Exception as exc:
+
+    print("Viewer replacement failed:")
+    print(exc)
+
+# ------------------------------------------------------------------
+# Assemble the interface.
+# ------------------------------------------------------------------
+
+try:
+
+    interface_children = []
+
+    if "header" in globals():
+        interface_children.append(header)
+
+    if "controls" in globals():
+        interface_children.append(controls)
+
+    interface_children.append(viewer_panel)
+
+    if "center_button" in globals():
+        interface_children.append(center_button)
+
+    if "inspector" in globals():
+        interface_children.append(inspector)
+
+    if "status" in globals():
+        interface_children.append(status)
+
+    main_interface = widgets.VBox(
+        interface_children,
+        layout=widgets.Layout(width="100%")
+    )
+
+except Exception as exc:
+
+    print("Unable to assemble interface:")
+    print(exc)
+
+# ------------------------------------------------------------------
+# Display only one interface.
+# ------------------------------------------------------------------
+
+try:
+
+    from IPython.display import clear_output
+
+    clear_output(wait=True)
+
+    display(main_interface)
+
+    if IPYALADIN_AVAILABLE:
+        viewer_stack.selected_index = 1
+        use_native.value = True
+
+    status.value = (
+        "<b style='color:#2e7d32'>"
+        "CMB-0032 Patch F loaded.<br>"
+        "Native Aladin viewer is now the primary viewer."
+        "</b>"
+    )
+
+except Exception as exc:
+
+    print("Display failed:")
+    print(exc)
+
+print("CMB-0032 PATCH F COMPLETE")
+
+# CMB-0032 PATCH G
+# Final synchronization and cleanup
+# ============================================================================
+
+print("CMB-0032 PATCH G")
+
+# ------------------------------------------------------------------
+# Always keep the native viewer synchronized.
+# ------------------------------------------------------------------
+
+def cmb0032_sync_native():
+
+    if not IPYALADIN_AVAILABLE:
+        return
+
+    try:
+        aladin.target = str(target.value)
+    except Exception:
+        pass
+
+    try:
+        aladin.survey = str(survey.value)
+    except Exception:
+        pass
+
+    try:
+        aladin.fov = float(fov.value)
+    except Exception:
+        pass
+
+
+try:
+    cmb0032_sync_native()
+except Exception:
+    pass
+
+
+# ------------------------------------------------------------------
+# Whenever controls change, update ipyaladin immediately.
+# ------------------------------------------------------------------
+
+for widget in (target, survey, fov):
+
+    try:
+
+        widget.observe(
+            lambda change: cmb0032_sync_native(),
+            names="value"
+        )
+
+    except Exception:
+        pass
+
+
+# ------------------------------------------------------------------
+# Default to the native viewer.
+# ------------------------------------------------------------------
+
+if IPYALADIN_AVAILABLE:
+
+    try:
+        viewer_stack.selected_index = 1
+    except Exception:
+        pass
+
+    try:
+        use_native.value = True
+    except Exception:
+        pass
+
+
+# ------------------------------------------------------------------
+# Remove duplicate displays.
+# ------------------------------------------------------------------
+
+try:
+
+    if "native_viewer_output" in globals():
+
+        with native_viewer_output:
+            clear_output(wait=True)
+            display(aladin)
+
+except Exception:
+    pass
+
+
+# ------------------------------------------------------------------
+# Status
+# ------------------------------------------------------------------
+
+try:
+
+    status.value = (
+        "<b style='color:#2e7d32'>"
+        "CMB-0032 Patch G loaded.<br>"
+        "Native viewer synchronized."
+        "</b>"
+    )
+
+except Exception:
+    pass
+
+
+print("CMB-0032 PATCH G COMPLETE")
+
+
+
+
+
+
+
+
 
 
 
