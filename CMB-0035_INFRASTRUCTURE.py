@@ -14,9 +14,12 @@ if text.strip().startswith('404'):
 
 text = text.replace('CMB-0034', 'CMB-0035')
 text = text.replace('34A-1', '35A-1')
-text = text.replace('else "none"', 'else "classic-output"')
+text = text.replace('else "none"', 'else "classic-html"')
 text = text.replace('VIEWER["enabled"] = IPYALADIN_AVAILABLE', 'VIEWER["enabled"] = True')
-text = text.replace('    print("Classic matplotlib viewer placeholder.")', '    print("CMB-0035 classic fallback viewer active.")')
+text = text.replace(
+    '    print("Classic matplotlib viewer placeholder.")',
+    '    display(HTML("<div style=\'height:680px;border:1px solid #888;background:#050505;color:white;font-family:Arial;padding:18px;box-sizing:border-box\'><h2>CMB-0035 Classic Viewer</h2><p>Fallback viewer active because ipyaladin is not installed.</p><div style=\'height:520px;border:1px solid #555;background:radial-gradient(ellipse at center,#eee 0%,#777 13%,#222 45%,#000 100%);position:relative\'><div style=\'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#ffeb3b;font-size:44px;font-weight:bold\'>+</div></div><p>Viewer panel rendered successfully.</p></div>"))'
+)
 
 GENERATED.write_text(text, encoding='utf-8')
 compile(text, str(GENERATED), 'exec')
