@@ -2379,7 +2379,7 @@ def app_info():
 
     print("Widgets        :", len(APP["widgets"]))
     print("Registry       :", len(REGISTRY))
-    print("Services       :", len(SERVICES"))
+    print("Services       :", len(SERVICES))
 
 # ============================================================
 # MEMORY REPORT
