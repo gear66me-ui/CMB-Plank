@@ -754,7 +754,7 @@ with classic_viewer:
 # STACK
 # ============================================================
 
-viewer_stack = widgets.Stack(
+viewer_stack = widgets.Vbox(
 
     children=[
 
