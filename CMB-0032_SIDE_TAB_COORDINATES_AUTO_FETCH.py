@@ -2360,7 +2360,7 @@ except Exception:
 print()
 
 print("Legacy cleanup complete.")
-print("CMB-0032D PATCH A COMPLETE"
+print("CMB-0032D PATCH A COMPLETE")
 
 
 
