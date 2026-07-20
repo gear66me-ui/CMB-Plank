@@ -425,10 +425,21 @@ def find_object(_=None):
         set_status('Searching inclusive catalog stack', parsed + '<br>Trying NED, SIMBAD, MAST/HSC, broad VizieR, and survey-family discovery for GOODS/CANDELS/JADES/HST/JWST/Gaia/2MASS/WISE/GALEX/X-ray catalogs…', '#2196f3')
         radius_arcsec = max(120.0, min(900.0, float(fov.value) * 3600.0))
         all_rows, seen = [], set()
+        print("\n========== NED ==========")
         query_ned(coord, radius_arcsec, all_rows, seen)
+        print("NED COMPLETE")
+
+        print("\n========== SIMBAD ==========")
         query_simbad(coord, radius_arcsec, all_rows, seen)
+        print("SIMBAD COMPLETE")
+
+        print("\n========== MAST ==========")
         query_mast(coord, radius_arcsec, all_rows, seen)
+        print("MAST COMPLETE")
+
+        print("\n========== VIZIER ==========")
         query_vizier_catalogs(coord, radius_arcsec, all_rows, seen)
+        print("VIZIER COMPLETE")
         all_rows = [r for r in all_rows if r.get('Catalog')]
         if not all_rows:
             warning_text = '<br>'.join(esc(w) for w in STATE['warnings']) or 'No catalog service returned a row.'
