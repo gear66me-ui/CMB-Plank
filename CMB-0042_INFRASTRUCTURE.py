@@ -10,7 +10,13 @@ except Exception:
     colab_output = None
 
 BASE = 'https://raw.githubusercontent.com/gear66me-ui/CMB-Plank/main/CMB-0040C_INFRASTRUCTURE.py'
+#source = urllib.request.urlopen(BASE, timeout=60).read().decode('utf-8')
+print("⏳ Downloading CMB-0040C infrastructure...")
+
 source = urllib.request.urlopen(BASE, timeout=60).read().decode('utf-8')
+
+print("✅ Infrastructure downloaded.")
+
 
 source = source.replace(
     "radius_arcsec = max(120.0, min(900.0, float(fov.value) * 3600.0))",
