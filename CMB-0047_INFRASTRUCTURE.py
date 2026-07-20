@@ -19,7 +19,7 @@ with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.St
 import numpy as np
 import pandas as pd
 import ipywidgets as widgets
-from IPython.display import display, FileLink
+from IPython.display import display, FileLink, HTML
 
 try:
     from google.colab import output
@@ -604,6 +604,20 @@ def export_csv(_=None):
 def cmb40r_find_galaxy(coord_text):
     coord_input.value = str(coord_text).strip()
     set_status('Finding galaxy', f'Searching all configured surveys/catalogs at: <b>{esc(coord_input.value)}</b>', '#ff9800')
+    try:
+        display(HTML("""
+        <script>
+        (function(){
+          const ro = document.querySelector('[id^="cmb40r_"][id$="_readout"]');
+          if (ro){
+            ro.innerHTML = '<b>Galaxy Finder running…</b><br>Querying NED, SIMBAD, MAST, and VizieR…';
+            ro.style.color = '#ffb74d';
+          }
+        })();
+        </script>
+        """))
+    except Exception:
+        pass
     find_object(None)
 
 try:
